@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import videoLogo from "../assets/upload.png";
-import { Button, Card, Label, Textarea, TextInput } from "flowbite-react";
+import { Alert, Button, Card, Label, Progress, Textarea, TextInput } from "flowbite-react";
 import axios  from 'axios';
+import toast from "react-hot-toast";
 
 
 
@@ -40,6 +41,16 @@ function VideoUpload() {
 		
 		
 	}
+	function resetForm() {
+		setMeta({
+			title: "",
+			description: "",
+		
+		});
+		setSelectedFile(null);
+		setUploading(false);
+		//setMessage("");
+	}
 	async function saveVideoToServer(video, videoMetaData) {
 		setUploading(true);
 		try {
@@ -52,20 +63,29 @@ function VideoUpload() {
 					"Content-Type": "multipart/form-data",
 				},
 				onUploadProgress: (progressEvent) => {
-					console.log(progressEvent);
+					const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+					// console.log(progress);
+					setProgress(progress);
 				},
 			}
 			);
-			console.log(response);
+			//console.log(response);
+			setProgress(0);
 			setMessage("file uploaded");
-			
+			setUploading(false);
+			resetForm();
+			toast.success("File uploaded successfully!!");
 		} catch (error) {
-			console.log(error);
+			setMessage("Error uploading file");
+			setUploading(false);
+			toast.error("File not uploaded!!")
+
+			//console.log(error);
 		}
 		
 	}
 	return (
-		<div >
+		<div className="text-white">
 			<Card className="flex flex-col items-center justify-center">
 				<h1 className="text-2xl">Upload Videos</h1>
 				<div>
@@ -74,13 +94,13 @@ function VideoUpload() {
 							<div className="mb-2 block">
 								<Label htmlFor="file-upload" value="Video title" />
 							</div>
-							<TextInput onChange={formFieldChange} name="title" placeholder="Enter video title" />
+							<TextInput value={meta.title} onChange={formFieldChange} name="title" placeholder="Enter video title" />
 						</div>
 						<div className="max-w-md">
 							<div className="mb-2 block">
 								<Label htmlFor="comment" value="Video Description" />
 							</div>
-							<Textarea onChange={ formFieldChange} name="description" placeholder="Describe your video" required rows={4} />
+							<Textarea value={meta.description} onChange={ formFieldChange} name="description" placeholder="Describe your video" required rows={4} />
 						</div>
 						<div className="flex items-center space-x-5 justify-center">
 							<div className="shrink-0">
@@ -105,8 +125,24 @@ function VideoUpload() {
 								/>
 							</label>
 						</div>
+						<div>
+							{uploading && (
+								<Progress color="green" progress={progress} textLabel="Uploading"  labelProgress labelText />
+							)}
+						</div>
+						<div>
+							{message && (
+								<Alert color="success" rounded withBorderAccent onDismiss={() => { 
+									setMessage("");
+								}}>
+									<span className="font-medium">Success Alert!!  </span>
+									{message}
+
+								</Alert>
+							)}
+						</div>
 						<div className=" flex justify-center">
-							<Button type="submit" className="text-blue-600 border-blue-600">Submit</Button>
+							<Button type="submit" >Submit</Button>
 
 						</div>
 					</form>
